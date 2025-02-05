@@ -66,11 +66,11 @@ Below are three sample images with bounding boxes plotted using the trained mode
 *Description: Text regions in a manga panel are accurately detected and bounded.*
 
 ### Sample 2
-![Sample 2](images/Figure_2.png)
+![Sample 2](samples/Figure_2.png)
 *Description: Multiple text regions are segmented and boxed correctly.*
 
 ### Sample 3
-![Sample 3](images/Figure_3.png)
+![Sample 3](samples/Figure_3.png)
 *Description: Fine-grained text detection in complex backgrounds.*
 
 ---
