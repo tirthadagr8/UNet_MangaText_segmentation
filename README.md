@@ -73,6 +73,46 @@ Below are three sample images with bounding boxes plotted using the trained mode
 *Description: Fine-grained text detection in complex backgrounds.*
 
 ---
+## Usage
+
+One can integrate the text detection model with OCR focused models to automate text detection and translation. For example:
+### OCR
+After fetching bounded box, crop those parts and pass through an OCR model to recognize the text in it
+```python
+from PIL import Image
+import matplotlib.pyplot as plt
+from transformers import VisionEncoderDecoderModel, AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained('tirthadagr8/CustomOCR')
+model=VisionEncoderDecoderModel.from_pretrained('tirthadagr8/CustomOCR')
+import torch
+from torchvision import transforms as T
+simple_transforms=T.Compose([
+            T.Resize((224,224)),
+            T.ToTensor(),
+            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+
+path="image.jpg"
+img=simple_transforms(Image.open(path))
+model.eval()
+with torch.no_grad():
+    print(tokenizer.batch_decode(model.cuda().generate(img.unsqueeze(0).cuda()),skip_special_tokens=True))
+
+plt.imshow(Image.open(path).resize((224,224)))
+```
+### Translation
+-> The recognized text can then be passed through a Language Model specialized for translation purposes
+```python
+from transformers import AutoTokenizer,AutoModelForCausalLM
+tokenizer=AutoTokenizer.from_pretrained('tirthadagr8/Japanese_to_english_gpt2CasualLM_GemmaTokenizer')
+model=AutoModelForCausalLM.from_pretrained('tirthadagr8/Japanese_to_english_gpt2CasualLM_GemmaTokenizer')
+model.cuda()
+src_text='あなたとは遊びたくない'
+print(tokenizer.batch_decode(model.generate(tokenizer.encode(f"Translate the following Japanese sentence to English:\n\nJapanese:{src_text}\nEnglish:",return_tensors='pt')[:,:-1].cuda(),max_length=128))[0])
+```
+
+---
 
 ## Acknowledgments
 ```bibtex
