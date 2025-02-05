@@ -144,11 +144,10 @@ def inference(model,image_path,img_size=512,device='cuda'):
             T.ToTensor(),
             T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
         ])
-    sam=torch.rand(1,1,1024,1024).to(device)
     img=simple_transforms(img).unsqueeze(0).to(device)
     model.eval().to(device)
     with torch.no_grad():
-        outputs = model(img,sam)['logits']
+        outputs = model(img)['logits']
     plt.imshow(img[0].permute(1,2,0).detach().cpu())
     plt.show()
     plt.imshow(outputs[0].permute(1,2,0).detach().cpu(),cmap='gray')

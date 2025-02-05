@@ -64,7 +64,7 @@ class UNet(Model):
             nn.Dropout2d(0.1)  # Reduced dropout rate
         )
 
-    def forward(self, pixel_values,masks,**kwargs):
+    def forward(self, pixel_values,masks=None,**kwargs):
         # Encoder
         enc1 = self.encoder1(pixel_values)
         enc2 = self.encoder2(self.pool1(enc1))
@@ -94,8 +94,10 @@ class UNet(Model):
 
         # Output
         output = self.output_layer(dec1)
-        # output = torch.sigmoid(output) 
-        loss=self.compute_loss(output,masks)
+        # output = torch.sigmoid(output)
+        loss=None
+        if masks is not None:
+            loss=self.compute_loss(output,masks)
         return   {
             'loss':loss,
             'logits':output
