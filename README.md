@@ -8,9 +8,8 @@ This repository contains an implementation of a **U-Net-based model** for text s
 3. [Training](#training)
 4. [Inference](#inference)
 5. [Sample Results](#sample-results)
-6. [Requirements](#requirements)
-7. [Usage](#usage)
-8. [Acknowledgments](#acknowledgments)
+6. [Usage](#usage)
+7. [Acknowledgments](#acknowledgments)
 
 ---
 
@@ -37,7 +36,7 @@ The model has been optimized to reduce the number of parameters while maintainin
 The model was trained using the Hugging Face `Trainer` API, which simplifies the training process by handling batching, logging, and evaluation.
 
 ### Training Details
-- **Dataset**: Manga images with corresponding binary masks for text regions(Fixed image size [3,1024,1024] and mask size [1,1024,1024]).
+- **Dataset**: Manga images with corresponding binary masks for text regions from Manga109 Dataset(Fixed image size [3,1024,1024] and mask size [1,1024,1024]).
 - **Loss Function**: BCE.
 - **Optimizer**: AdamW with a learning rate scheduler.
 - **Batch Size**: 4 (adjustable based on GPU memory).
@@ -74,3 +73,29 @@ Below are three sample images with bounding boxes plotted using the trained mode
 *Description: Fine-grained text detection in complex backgrounds.*
 
 ---
+
+## Acknowledgments
+```bibtex
+@article{mtap_matsui_2017,
+    author={Yusuke Matsui and Kota Ito and Yuji Aramaki and Azuma Fujimoto and Toru Ogawa and Toshihiko Yamasaki and Kiyoharu Aizawa},
+    title={Sketch-based Manga Retrieval using Manga109 Dataset},
+    journal={Multimedia Tools and Applications},
+    volume={76},
+    number={20},
+    pages={21811--21838},
+    doi={10.1007/s11042-016-4020-z},
+    year={2017}
+}
+```
+```bibtex
+@article{multimedia_aizawa_2020,
+    author={Kiyoharu Aizawa and Azuma Fujimoto and Atsushi Otsubo and Toru Ogawa and Yusuke Matsui and Koki Tsubota and Hikaru Ikuta},
+    title={Building a Manga Dataset ``Manga109'' with Annotations for Multimedia Applications},
+    journal={IEEE MultiMedia},
+    volume={27},
+    number={2},
+    pages={8--18},
+    doi={10.1109/mmul.2020.2987895},
+    year={2020}
+}
+```
