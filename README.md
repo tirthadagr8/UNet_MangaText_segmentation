@@ -101,6 +101,17 @@ with torch.no_grad():
 
 plt.imshow(Image.open(path).resize((224,224)))
 ```
+Below is a table showcasing two sample images and their corresponding text:
+
+| Image | Text |
+|-------|------|
+| ![Sample 1](samples/Figure_4.png) | 作戦射策即是有個好主意眼… |
+| ![Sample 2](samples/Figure_5.png) | 瑋麾翫炭ッ
+貝薇勒壌
+蹂敷脈珈用
+貧其戰霄
+倹陷 |
+
 ### Translation
 -> The recognized text can then be passed through a Language Model specialized for translation purposes
 ```python
