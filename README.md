@@ -8,9 +8,8 @@ This repository contains an implementation of a **U-Net-based model** for text s
 3. [Training](#training)
 4. [Inference](#inference)
 5. [Sample Results](#sample-results)
-6. [Requirements](#requirements)
-7. [Usage](#usage)
-8. [Acknowledgments](#acknowledgments)
+6. [Usage](#usage)
+7. [Acknowledgments](#acknowledgments)
 
 ---
 
@@ -37,7 +36,7 @@ The model has been optimized to reduce the number of parameters while maintainin
 The model was trained using the Hugging Face `Trainer` API, which simplifies the training process by handling batching, logging, and evaluation.
 
 ### Training Details
-- **Dataset**: Manga images with corresponding binary masks for text regions(Fixed image size [3,1024,1024] and mask size [1,1024,1024]).
+- **Dataset**: Manga images with corresponding binary masks for text regions from Manga109 Dataset(Fixed image size [3,1024,1024] and mask size [1,1024,1024]).
 - **Loss Function**: BCE.
 - **Optimizer**: AdamW with a learning rate scheduler.
 - **Batch Size**: 4 (adjustable based on GPU memory).
@@ -74,3 +73,76 @@ Below are three sample images with bounding boxes plotted using the trained mode
 *Description: Fine-grained text detection in complex backgrounds.*
 
 ---
+## Usage
+
+One can integrate the text detection model with OCR focused models to automate text detection and translation. For example:
+### OCR
+After fetching bounded box, crop those parts and pass through an OCR model to recognize the text in it
+```python
+from PIL import Image
+import matplotlib.pyplot as plt
+from transformers import VisionEncoderDecoderModel, AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained('tirthadagr8/CustomOCR')
+model=VisionEncoderDecoderModel.from_pretrained('tirthadagr8/CustomOCR')
+import torch
+from torchvision import transforms as T
+simple_transforms=T.Compose([
+            T.Resize((224,224)),
+            T.ToTensor(),
+            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+
+path="image.jpg"
+img=simple_transforms(Image.open(path))
+model.eval()
+with torch.no_grad():
+    print(tokenizer.batch_decode(model.cuda().generate(img.unsqueeze(0).cuda()),skip_special_tokens=True))
+
+plt.imshow(Image.open(path).resize((224,224)))
+```
+Below is a table showcasing two sample images and their corresponding text:
+
+| Image | Text |
+|-------|------|
+| ![Sample 1](samples/Figure_4.png) | 作戦射策即是有個好主意眼… |
+| ![Sample 2](samples/Figure_5.png) | 瑋麾翫炭ッ 貝薇勒壌 蹂敷脈珈用 貧其戰霄 倹陷 |
+
+### Translation
+-> The recognized text can then be passed through a Language Model specialized for translation purposes
+```python
+from transformers import AutoTokenizer,AutoModelForCausalLM
+tokenizer=AutoTokenizer.from_pretrained('tirthadagr8/Japanese_to_english_gpt2CasualLM_GemmaTokenizer')
+model=AutoModelForCausalLM.from_pretrained('tirthadagr8/Japanese_to_english_gpt2CasualLM_GemmaTokenizer')
+model.cuda()
+src_text='あなたとは遊びたくない'
+print(tokenizer.batch_decode(model.generate(tokenizer.encode(f"Translate the following Japanese sentence to English:\n\nJapanese:{src_text}\nEnglish:",return_tensors='pt')[:,:-1].cuda(),max_length=128))[0])
+```
+
+---
+
+## Acknowledgments
+```bibtex
+@article{mtap_matsui_2017,
+    author={Yusuke Matsui and Kota Ito and Yuji Aramaki and Azuma Fujimoto and Toru Ogawa and Toshihiko Yamasaki and Kiyoharu Aizawa},
+    title={Sketch-based Manga Retrieval using Manga109 Dataset},
+    journal={Multimedia Tools and Applications},
+    volume={76},
+    number={20},
+    pages={21811--21838},
+    doi={10.1007/s11042-016-4020-z},
+    year={2017}
+}
+```
+```bibtex
+@article{multimedia_aizawa_2020,
+    author={Kiyoharu Aizawa and Azuma Fujimoto and Atsushi Otsubo and Toru Ogawa and Yusuke Matsui and Koki Tsubota and Hikaru Ikuta},
+    title={Building a Manga Dataset ``Manga109'' with Annotations for Multimedia Applications},
+    journal={IEEE MultiMedia},
+    volume={27},
+    number={2},
+    pages={8--18},
+    doi={10.1109/mmul.2020.2987895},
+    year={2020}
+}
+```
