@@ -4,19 +4,34 @@ from model import Model
 from config import Config
 import torch.nn.functional as F
 from utility import *
+from transformers import PretrainedConfig,PreTrainedModel
+
+class UNetConfig(PretrainedConfig):
+    model_type = "unet" 
+    """- **model_type** (`str`) -- An identifier for the model type, serialized into the JSON file, and used to recreate
+    the correct object in [`~transformers.AutoConfig`].
+    """
+
+    def __init__(self,in_channels=3,out_channels=1,img_size=512,**kwargs):
+        super().__init__(**kwargs)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.img_size = img_size
 
 
-class UNet(Model):
+class UNet(PreTrainedModel):
+    config_class = UNetConfig # - **config_class** ([`PretrainedConfig`]) -- A subclass of [`PretrainedConfig`] to use as configuration class
     """
     UNet architecture for image segmentation with reduced parameters.
     Inputs:
         in_channels (int): Number of input channels.
         out_channels (int): Number of output channels.
     """
-    def __init__(self, in_channels=3, out_channels=1, config=None):
-        super().__init__()
-        
-        self.img_size=config.img_size if config is not None else 1024
+    def __init__(self, config):
+        super().__init__(config)
+        self.img_size = config.img_size
+        in_channels = config.in_channels
+        out_channels = config.out_channels
         # Encoder (Downsampling path)
         self.encoder1 = self._block(in_channels, 32, "enc1")  # Reduced channels
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -49,9 +64,6 @@ class UNet(Model):
         # Output layer
         self.output_layer = nn.Conv2d(32, out_channels, kernel_size=1)
         
-        if config is not None:
-            print("Loading Model Weights")
-            self.load(config.model_checkpoint, config.device)
 
     def _block(self, in_channels, out_channels, name):
         return nn.Sequential(
@@ -98,10 +110,7 @@ class UNet(Model):
         loss=None
         if masks is not None:
             loss=self.compute_loss(output,masks)
-        return   {
-            'loss':loss,
-            'logits':output
-        }
+        return   SegmentationOutput(logits=output,loss=loss)
 
 
     def compute_loss(self,predicted_mask,input_mask):
@@ -112,12 +121,15 @@ class UNet(Model):
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     img_h, img_w = 64, 64
-    model = UNet(in_channels=3, out_channels=1,img_size=64).to(device)
-
+    cfg=Config()
+    unet_config=UNetConfig(in_channels=3,out_channels=1,img_size=64)
+    model=UNet(unet_config).to(device)
+    # model = UNet.from_pretrained('C:/Users/tirth/Desktop/model_ckpt/').to(device)
+    # model.save_pretrained('C:/Users/tirth/Desktop/model_ckpt/')
     # Test forward pass
     x = torch.randn(1, 3, img_h, img_w).to(device)  # Batch of 2 images
     z = torch.rand(1, 1, img_h, img_w).to(device)
     y = model(x,z)
-    print("Output shape:", y['logits'].shape)  # Expected: (2, 1, 512, 512)
-    print("Output shape:", y['loss'])
+    print("Output shape:", y.logits.shape)  # Expected: (2, 1, 512, 512)
+    print("Output shape:", y.loss)
     print(f"Trainable parameters: {count_parameters(model)/1e6:.1f}M")

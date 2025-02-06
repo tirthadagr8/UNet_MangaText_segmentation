@@ -6,10 +6,19 @@ from config import Config
 from typing import Union
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
+from dataclasses import dataclass
+from typing import Optional, Tuple
 import matplotlib.patches as patches
 from torchvision import transforms as T
+from transformers.utils import ModelOutput
 
 config=Config()
+
+@dataclass
+class SegmentationOutput(ModelOutput):
+    loss: Optional[torch.FloatTensor] = None
+    logits: torch.FloatTensor = None
+
 
 # Helper function to count trainable parameters
 def count_parameters(model): # print(f"Trainable parameters: {count_parameters(model)/1e6:.1f}M")
@@ -147,7 +156,7 @@ def inference(model,image_path,img_size=512,device='cuda'):
     img=simple_transforms(img).unsqueeze(0).to(device)
     model.eval().to(device)
     with torch.no_grad():
-        outputs = model(img)['logits']
+        outputs = model(img).logits
     plt.imshow(img[0].permute(1,2,0).detach().cpu())
     plt.show()
     plt.imshow(outputs[0].permute(1,2,0).detach().cpu(),cmap='gray')

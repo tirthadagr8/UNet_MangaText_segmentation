@@ -4,9 +4,11 @@ class Config:
         self.decoder_model_name='dis|tilgpt2'
         self.feature_extractor_name='microsoft/resnet-50'
         self.tokenizer_name='tirthadagr8/CustomOCR'
+        self.in_channels=3
+        self.out_channels=1
         self.img_size=1024
         self.device='cuda'
-        self.model_checkpoint="./UNet-CustomManga.pth"
+        self.model_checkpoint='C:/Users/tirth/Desktop/UNet_MangaText_segmentation/model_checkpoint/'
         self.NEPTUNE_API_TOKEN=""
         self.NEPTUNE_PROJECT=""
         self.report_to='none' # 'neptune' for logging to Neptune

@@ -1,0 +1,12 @@
+{
+  "architectures": [
+    "UNet"
+  ],
+  "img_size": 1024,
+  "in_channels": 3,
+  "model_checkpoint": null,
+  "model_type": "unet",
+  "out_channels": 1,
+  "torch_dtype": "float32",
+  "transformers_version": "4.49.0.dev0"
+}
