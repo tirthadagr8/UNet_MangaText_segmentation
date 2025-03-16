@@ -79,33 +79,43 @@ One can integrate the text detection model with OCR focused models to automate t
 ### OCR
 After fetching bounded box, crop those parts and pass through an OCR model to recognize the text in it
 ```python
-from PIL import Image
+import torch
+import numpy as np
+from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
+from torchvision import transforms as T
 from transformers import VisionEncoderDecoderModel, AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained('tirthadagr8/CustomOCR')
 model=VisionEncoderDecoderModel.from_pretrained('tirthadagr8/CustomOCR')
-import torch
-from torchvision import transforms as T
-simple_transforms=T.Compose([
-            T.Resize((224,224)),
-            T.ToTensor(),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
 
-path="image.jpg"
-img=simple_transforms(Image.open(path))
+def resize_with_padding(image, target_size=(224, 224)):
+    # Resize to fit within target_size while preserving aspect ratio
+    image.thumbnail((target_size[0], target_size[1]))
+    delta_w = target_size[0] - image.width
+    delta_h = target_size[1] - image.height
+    padding = (delta_w//2, delta_h//2, delta_w - (delta_w//2), delta_h - (delta_h//2))
+    padded_img = ImageOps.expand(image, padding, fill="white")
+    transform = T.Compose([
+        T.ToTensor(),  # Convert to tensor and scale to [0, 1]
+        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize
+    ])
+    return transform((padded_img))
+
+path="/home/t2/Downloads/Figure_4.png"
+img=resize_with_padding(Image.open(path).convert('RGB'))
 model.eval()
 with torch.no_grad():
     print(tokenizer.batch_decode(model.cuda().generate(img.unsqueeze(0).cuda()),skip_special_tokens=True))
 
-plt.imshow(Image.open(path).resize((224,224)))
+plt.imshow(img.permute(1,2,0).detach().cpu().numpy())
+plt.show()
 ```
 Below is a table showcasing two sample images and their corresponding text:
 
 | Image | Text |
 |-------|------|
-| <img src="samples/Figure_4.png" width="200"/> | 作戦射策即是有個好主意眼… |
+| <img src="samples/Figure_4.png" width="200"/> | 作為封印策我可是有個女子急限… |
 | <img src="samples/Figure_5.png" width="200"/> | 瑋麾翫炭ッ 貝薇勒壌 蹂敷脈珈用 貧其戰霄 倹陷 |
 
 ### Translation
